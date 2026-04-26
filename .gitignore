@@ -1,0 +1,10 @@
+ledger-data.json
+node_modules/
+dist/
+build/
+.gradle/
+android/
+*.apk
+*.keystore
+*.jks
+local.properties

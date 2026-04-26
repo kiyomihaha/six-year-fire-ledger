@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#fff1de" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="六年之约" />
+    <title>六年之约记账</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23fff1de'/%3E%3Cpath d='M32 10c8 8 14 17 14 27a14 14 0 1 1-28 0c0-10 6-19 14-27Z' fill='%23f38b46'/%3E%3Cpath d='M32 22c5 5 8 10 8 16a8 8 0 1 1-16 0c0-6 3-11 8-16Z' fill='%23337b64'/%3E%3C/svg%3E" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icon.svg" />
+    <link rel="stylesheet" href="styles.css?v=7" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="app-view active" data-view="home" aria-label="总览">
+        <section class="hero" aria-label="FIRE 目标进度">
+          <div class="hero-top">
+            <div>
+              <p class="eyebrow">FIRE PLAN</p>
+              <h1>六年之约</h1>
+              <p class="today-date" id="todayDate">今天</p>
+            </div>
+            <button class="icon-button" id="resetDemo" aria-label="重置示例数据" title="重置">
+              ↻
+            </button>
+          </div>
+
+          <div class="progress-card">
+            <div class="progress-ring" aria-label="目标完成度">
+              <svg viewBox="0 0 120 120" role="img">
+                <circle class="ring-bg" cx="60" cy="60" r="50"></circle>
+                <circle class="ring-fill" id="ringFill" cx="60" cy="60" r="50"></circle>
+              </svg>
+              <div class="ring-label">
+                <strong id="progressPercent">0%</strong>
+                <span>已完成</span>
+              </div>
+            </div>
+            <div class="target-stats">
+              <span>当前积累</span>
+              <strong id="savedAmount">¥0</strong>
+              <small id="targetHint">离愿景更近一点</small>
+            </div>
+          </div>
+        </section>
+
+        <section class="summary-grid" aria-label="本月概览">
+          <article>
+            <span>本月结余</span>
+            <strong id="monthBalance">¥0</strong>
+          </article>
+          <article>
+            <span>今日花费</span>
+            <strong id="todayExpense">¥0</strong>
+          </article>
+          <article>
+            <span>日均可花</span>
+            <strong id="dailyBudget">¥0</strong>
+          </article>
+        </section>
+
+        <section class="recent-section" aria-label="最近记录">
+          <div class="section-title">
+            <h2>最近记录</h2>
+            <button id="clearEntries">清空</button>
+          </div>
+          <div class="empty-state" id="emptyState">今天开始，给 100w 目标添第一块砖。</div>
+          <ul class="entry-list" id="entryList"></ul>
+        </section>
+      </section>
+
+      <section class="app-view" data-view="entry" aria-label="记账">
+        <header class="view-header">
+          <p class="eyebrow">QUICK ENTRY</p>
+          <h1>三秒记一笔</h1>
+        </header>
+
+        <section class="entry-panel" aria-label="快速记账">
+          <div class="segmented" role="tablist" aria-label="类型">
+            <button class="active" data-type="expense" role="tab" aria-selected="true">支出</button>
+            <button data-type="income" role="tab" aria-selected="false">收入</button>
+            <button data-type="saving" role="tab" aria-selected="false">存入</button>
+          </div>
+
+          <label class="amount-field">
+            <span>金额</span>
+            <input id="amountInput" inputmode="decimal" placeholder="0.00" autocomplete="off" />
+          </label>
+
+          <div class="quick-amounts" aria-label="常用金额">
+            <button data-amount="12">¥12</button>
+            <button data-amount="25">¥25</button>
+            <button data-amount="38">¥38</button>
+            <button data-amount="68">¥68</button>
+          </div>
+
+          <div class="category-grid" id="categoryGrid" aria-label="分类"></div>
+
+          <label class="note-field">
+            <span>备注</span>
+            <input id="noteInput" placeholder="可选，比如 午饭 / 地铁 / 工资" autocomplete="off" />
+          </label>
+
+          <button class="primary-action" id="saveEntry">记一笔</button>
+        </section>
+      </section>
+
+      <section class="app-view" data-view="goal" aria-label="目标">
+        <header class="view-header">
+          <p class="eyebrow">TARGET</p>
+          <h1>六年之约</h1>
+        </header>
+
+        <section class="goal-panel">
+          <div class="goal-row">
+            <span>愿景锚点</span>
+            <strong>¥1,000,000</strong>
+          </div>
+          <div class="goal-row">
+            <span>剩余天数</span>
+            <strong id="daysLeft">0 天</strong>
+          </div>
+          <div class="goal-row">
+            <span>参考月节奏</span>
+            <strong id="monthlyTarget">¥0</strong>
+          </div>
+          <div class="warm-meter" aria-label="目标进度条">
+            <span id="goalMeter"></span>
+          </div>
+          <p id="goalSentence" class="goal-sentence">不是硬性任务，只是给未来一个温柔方向。</p>
+        </section>
+
+        <section class="analysis-panel" aria-label="消费分析">
+          <div class="section-title">
+            <h2>消费分析</h2>
+            <button id="refreshAdvice">换一张</button>
+          </div>
+          <div class="analysis-grid">
+            <article>
+              <span>今日消费</span>
+              <strong id="analysisToday">¥0</strong>
+            </article>
+            <article>
+              <span>本月消费</span>
+              <strong id="analysisMonth">¥0</strong>
+            </article>
+            <article>
+              <span>今年消费</span>
+              <strong id="analysisYear">¥0</strong>
+            </article>
+            <article>
+              <span>本月日均</span>
+              <strong id="analysisDailyAvg">¥0</strong>
+            </article>
+          </div>
+          <div class="insight-strip">
+            <span>主要花在</span>
+            <strong id="topCategory">暂时没有</strong>
+          </div>
+          <div class="advice-card" aria-label="随机彩蛋建议">
+            <span>今日小纸条</span>
+            <p id="adviceText">先记几笔账，建议就会更懂你一点。</p>
+          </div>
+        </section>
+
+        <section class="recent-section">
+          <div class="section-title">
+            <h2>存钱记录</h2>
+          </div>
+          <ul class="entry-list compact" id="savingList"></ul>
+        </section>
+      </section>
+
+      <section class="app-view" data-view="profile" aria-label="我的">
+        <header class="view-header">
+          <p class="eyebrow">PROFILE</p>
+          <h1>我的计划</h1>
+        </header>
+
+        <section class="profile-grid">
+          <article>
+            <span>计划名称</span>
+            <strong>六年之约</strong>
+          </article>
+          <article>
+            <span>开始日期</span>
+            <strong>2026.04.26</strong>
+          </article>
+          <article>
+            <span>数据位置</span>
+            <strong>本机浏览器</strong>
+          </article>
+          <article>
+            <span>备份状态</span>
+            <strong id="syncStatus">本机离线可用</strong>
+          </article>
+        </section>
+
+        <section class="recent-section">
+          <div class="section-title">
+            <h2>快捷操作</h2>
+          </div>
+          <label class="sync-field">
+            <span>电脑同步地址</span>
+            <input id="syncServerInput" placeholder="http://电脑IP:4174" autocomplete="off" />
+          </label>
+          <div class="action-list">
+            <button id="backupNow">备份到电脑</button>
+            <button id="restoreNow">从电脑恢复</button>
+            <button id="profileAddSaving">快速存入 FIRE</button>
+            <button id="profileResetDemo">恢复示例数据</button>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <nav class="bottom-bar" aria-label="主要导航">
+      <button class="active" data-view-target="home">总览</button>
+      <button data-view-target="entry">记账</button>
+      <button data-view-target="goal">目标</button>
+      <button data-view-target="profile">我的</button>
+    </nav>
+
+    <script src="app.js?v=8"></script>
+  </body>
+</html>
