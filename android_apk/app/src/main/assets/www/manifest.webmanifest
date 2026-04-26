@@ -1,0 +1,19 @@
+{
+  "name": "六年之约记账",
+  "short_name": "六年之约",
+  "description": "一个温暖、轻便、围绕六年之约的手机记账应用。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fff6eb",
+  "theme_color": "#fff1de",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
