@@ -5,7 +5,7 @@ const path = require("path");
 const PORT = Number(process.env.PORT || 4174);
 const HOST = process.env.HOST || "0.0.0.0";
 const ROOT = __dirname;
-const DATA_FILE = path.join(ROOT, "ledger-data.json");
+const DATA_FILE = process.env.DATA_FILE || path.join(ROOT, "ledger-data.json");
 const TYPES = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
@@ -25,8 +25,13 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    if (req.url.startsWith("/api/backup")) {
+      await handleBackup(req, res);
+      return;
+    }
+
     if (req.url.startsWith("/api/sync")) {
-      await handleSync(req, res);
+      await handleRestore(req, res);
       return;
     }
 
@@ -41,12 +46,17 @@ server.listen(PORT, HOST, () => {
   console.log(`六年之约同步服务已启动: http://${HOST}:${PORT}`);
 });
 
-async function handleSync(req, res) {
-  if (req.method === "GET") {
-    sendJson(res, readLedger());
+async function handleRestore(req, res) {
+  if (req.method !== "GET") {
+    res.writeHead(405);
+    res.end("Method not allowed");
     return;
   }
 
+  sendJson(res, readLedger());
+}
+
+async function handleBackup(req, res) {
   if (req.method !== "POST") {
     res.writeHead(405);
     res.end("Method not allowed");
@@ -55,11 +65,9 @@ async function handleSync(req, res) {
 
   const body = await readBody(req);
   const incoming = JSON.parse(body || "{}");
-  const serverData = readLedger();
-  const merged = mergeEntries(serverData.entries, incoming.entries || []);
   const nextData = {
-    entries: merged,
-    syncedAt: new Date().toISOString(),
+    entries: sanitizeEntries(incoming.entries || []),
+    backedUpAt: new Date().toISOString(),
   };
 
   fs.writeFileSync(DATA_FILE, JSON.stringify(nextData, null, 2), "utf8");
@@ -105,10 +113,10 @@ function readLedger() {
   }
 }
 
-function mergeEntries(a, b) {
+function sanitizeEntries(entries) {
   const byId = new Map();
 
-  [...a, ...b].forEach((entry) => {
+  entries.forEach((entry) => {
     if (!entry || !entry.id) {
       return;
     }

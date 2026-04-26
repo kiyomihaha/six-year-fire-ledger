@@ -249,7 +249,7 @@ async function backupToComputer() {
   updateSyncStatus("备份中...");
 
   try {
-    const response = await fetch(`${url}/api/sync`, {
+    const response = await fetch(`${url}/api/backup`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ entries: state.entries }),
@@ -259,10 +259,7 @@ async function backupToComputer() {
       throw new Error("sync failed");
     }
 
-    const data = await response.json();
-    state.entries = mergeEntries(state.entries, data.entries || []);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    render();
+    await response.json();
     updateSyncStatus(`已备份 ${formatTime(new Date())}`);
   } catch {
     updateSyncStatus("备份失败");
@@ -285,7 +282,7 @@ async function restoreFromComputer() {
     }
 
     const data = await response.json();
-    state.entries = mergeEntries(state.entries, data.entries || []);
+    state.entries = data.entries || [];
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     render();
     updateSyncStatus(`已恢复 ${formatTime(new Date())}`);
