@@ -1,9 +1,9 @@
-const CACHE_NAME = "six-year-fire-ledger-v4";
+const CACHE_NAME = "six-year-fire-ledger-v7";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=8",
-  "./app.js?v=9",
+  "./styles.css?v=10",
+  "./app.js?v=12",
   "./manifest.webmanifest",
   "./icon.svg",
 ];

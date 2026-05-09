@@ -8,3 +8,6 @@ android/
 *.keystore
 *.jks
 local.properties
+__pycache__/
+*.pyc
+.playwright-cli/

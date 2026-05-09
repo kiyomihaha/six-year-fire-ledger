@@ -10,7 +10,7 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23fff1de'/%3E%3Cpath d='M32 10c8 8 14 17 14 27a14 14 0 1 1-28 0c0-10 6-19 14-27Z' fill='%23f38b46'/%3E%3Cpath d='M32 22c5 5 8 10 8 16a8 8 0 1 1-16 0c0-6 3-11 8-16Z' fill='%23337b64'/%3E%3C/svg%3E" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="icon.svg" />
-    <link rel="stylesheet" href="styles.css?v=8" />
+    <link rel="stylesheet" href="styles.css?v=14" />
   </head>
   <body>
     <main class="app-shell">
@@ -21,6 +21,7 @@
               <p class="eyebrow">FIRE PLAN</p>
               <h1>六年之约</h1>
               <p class="today-date" id="todayDate">今天</p>
+              <p class="hero-note">把每一笔钱放回自己手里。</p>
             </div>
             <button class="icon-button" id="resetDemo" aria-label="重置示例数据" title="重置">
               ↻
@@ -61,6 +62,24 @@
           </article>
         </section>
 
+        <section class="quick-dock" aria-label="快捷操作">
+          <button data-quick-view="entry">
+            <span>记</span>
+            <strong>快速记账</strong>
+            <small>中间数加减</small>
+          </button>
+          <button data-quick-saving>
+            <span>存</span>
+            <strong>存入 FIRE</strong>
+            <small>给约定加一笔</small>
+          </button>
+          <button data-quick-view="profile">
+            <span>备</span>
+            <strong>本地备份</strong>
+            <small>手机和电脑</small>
+          </button>
+        </section>
+
         <section class="recent-section" aria-label="最近记录">
           <div class="section-title">
             <h2>最近记录</h2>
@@ -75,6 +94,7 @@
         <header class="view-header">
           <p class="eyebrow">QUICK ENTRY</p>
           <h1>三秒记一笔</h1>
+          <p class="view-subtitle">先选大概金额，再用加减微调。</p>
         </header>
 
         <section class="entry-panel" aria-label="快速记账">
@@ -89,14 +109,45 @@
             <input id="amountInput" inputmode="decimal" placeholder="0.00" autocomplete="off" />
           </label>
 
-          <div class="quick-amounts" aria-label="常用金额">
-            <button data-amount="12">¥12</button>
-            <button data-amount="25">¥25</button>
-            <button data-amount="38">¥38</button>
-            <button data-amount="68">¥68</button>
+          <div class="amount-picker" aria-label="金额选择">
+            <div class="amount-preview-card">
+              <span>本次金额</span>
+              <strong id="amountPreview">¥0</strong>
+            </div>
+            <div class="amount-base">
+              <span>中间数</span>
+              <div class="quick-amounts" aria-label="常用金额">
+                <button data-amount="10">¥10</button>
+                <button data-amount="20">¥20</button>
+                <button data-amount="30">¥30</button>
+                <button data-amount="50">¥50</button>
+                <button data-amount="100">¥100</button>
+                <button data-amount="200">¥200</button>
+              </div>
+            </div>
+            <div class="amount-stepper" aria-label="金额微调">
+              <button data-delta="-10">-10</button>
+              <button data-delta="-1">-1</button>
+              <span>微调</span>
+              <button data-delta="1">+1</button>
+              <button data-delta="10">+10</button>
+            </div>
           </div>
 
-          <div class="category-grid" id="categoryGrid" aria-label="分类"></div>
+          <div class="category-block">
+            <span class="field-caption">一级分类</span>
+            <div class="category-grid" id="categoryGrid" aria-label="一级分类"></div>
+          </div>
+          <div class="category-block">
+            <span class="field-caption">二级分类</span>
+            <div class="subcategory-grid" id="subcategoryGrid" aria-label="二级分类"></div>
+          </div>
+          <div class="custom-category-wrap" id="customCategoryWrap" hidden>
+            <label class="note-field">
+              <span>自定义分类</span>
+              <input id="customCategoryInput" placeholder="比如 夜宵 / 宠物 / 数码配件" autocomplete="off" />
+            </label>
+          </div>
 
           <label class="note-field">
             <span>备注</span>
@@ -159,6 +210,26 @@
             <span>主要花在</span>
             <strong id="topCategory">暂时没有</strong>
           </div>
+          <div class="analysis-list" aria-label="月度重点">
+            <article>
+              <span>本月最大一笔</span>
+              <strong id="largestExpense">暂无</strong>
+            </article>
+            <article>
+              <span>最高频消费</span>
+              <strong id="frequentCategory">暂无</strong>
+            </article>
+            <article>
+              <span>消费次数</span>
+              <strong id="expenseCount">0 次</strong>
+            </article>
+          </div>
+          <div class="chart-panel" aria-label="分类花费排行">
+            <div class="section-title compact-title">
+              <h2>分类排行</h2>
+            </div>
+            <div class="bar-list" id="categoryBars"></div>
+          </div>
           <div class="advice-card" aria-label="随机彩蛋建议">
             <span>今日小纸条</span>
             <p id="adviceText">先记几笔账，建议就会更懂你一点。</p>
@@ -217,12 +288,12 @@
     </main>
 
     <nav class="bottom-bar" aria-label="主要导航">
-      <button class="active" data-view-target="home">总览</button>
-      <button data-view-target="entry">记账</button>
-      <button data-view-target="goal">目标</button>
-      <button data-view-target="profile">我的</button>
+      <button class="active" data-view-target="home"><span>总</span>总览</button>
+      <button data-view-target="entry"><span>记</span>记账</button>
+      <button data-view-target="goal"><span>约</span>目标</button>
+      <button data-view-target="profile"><span>我</span>我的</button>
     </nav>
 
-    <script src="app.js?v=9"></script>
+    <script src="app.js?v=14"></script>
   </body>
 </html>

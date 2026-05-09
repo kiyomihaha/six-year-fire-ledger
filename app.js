@@ -6,26 +6,26 @@ const YEARS = 6;
 
 const categories = {
   expense: [
-    ["🍜", "餐饮"],
-    ["🚇", "交通"],
-    ["🛒", "购物"],
-    ["🏠", "居家"],
-    ["☕", "咖啡"],
-    ["💊", "健康"],
-    ["🎬", "娱乐"],
-    ["📦", "其他"],
+    { icon: "餐", label: "餐饮", children: ["早餐", "午餐", "晚餐", "夜宵", "饮料咖啡", "零食", "聚餐", "自定义"] },
+    { icon: "行", label: "交通", children: ["地铁", "公交", "打车", "高铁机票", "加油充电", "停车", "自定义"] },
+    { icon: "购", label: "购物", children: ["食品", "生活用品", "电子产品", "衣服鞋包", "护肤清洁", "家电家具", "自定义"] },
+    { icon: "家", label: "居家", children: ["房租房贷", "水电燃气", "物业", "维修", "宽带话费", "自定义"] },
+    { icon: "健", label: "健康", children: ["买药", "门诊", "体检", "运动", "保险", "自定义"] },
+    { icon: "娱", label: "娱乐", children: ["电影", "游戏", "会员订阅", "旅行", "礼物", "自定义"] },
+    { icon: "学", label: "学习", children: ["书籍", "课程", "软件工具", "考试认证", "自定义"] },
+    { icon: "其", label: "其他", children: ["人情", "手续费", "临时支出", "自定义"] },
   ],
   income: [
-    ["💼", "工资"],
-    ["🎁", "奖金"],
-    ["📈", "投资"],
-    ["💸", "副业"],
+    { icon: "工", label: "工资", children: ["固定工资", "绩效奖金", "补贴", "自定义"] },
+    { icon: "奖", label: "奖金", children: ["年终奖", "项目奖", "红包", "自定义"] },
+    { icon: "投", label: "投资", children: ["股息", "基金", "利息", "自定义"] },
+    { icon: "副", label: "副业", children: ["接单", "咨询", "销售", "自定义"] },
   ],
   saving: [
-    ["🌱", "存款"],
-    ["🏦", "定投"],
-    ["🔥", "FIRE"],
-    ["🧧", "红包"],
+    { icon: "存", label: "存款", children: ["活期", "定期", "备用金", "自定义"] },
+    { icon: "定", label: "定投", children: ["基金", "股票", "养老金", "自定义"] },
+    { icon: "约", label: "FIRE", children: ["六年之约", "长期账户", "自定义"] },
+    { icon: "红", label: "红包", children: ["现金红包", "转账红包", "自定义"] },
   ],
 };
 
@@ -48,7 +48,8 @@ const adviceNotes = [
 
 let state = loadState();
 let currentType = "expense";
-let currentCategory = categories.expense[0][1];
+let currentCategory = categories.expense[0].label;
+let currentSubcategory = categories.expense[0].children[0];
 
 const els = {
   views: document.querySelectorAll(".app-view"),
@@ -70,6 +71,10 @@ const els = {
   analysisYear: document.querySelector("#analysisYear"),
   analysisDailyAvg: document.querySelector("#analysisDailyAvg"),
   topCategory: document.querySelector("#topCategory"),
+  largestExpense: document.querySelector("#largestExpense"),
+  frequentCategory: document.querySelector("#frequentCategory"),
+  expenseCount: document.querySelector("#expenseCount"),
+  categoryBars: document.querySelector("#categoryBars"),
   adviceText: document.querySelector("#adviceText"),
   refreshAdvice: document.querySelector("#refreshAdvice"),
   syncStatus: document.querySelector("#syncStatus"),
@@ -78,7 +83,11 @@ const els = {
   restoreNow: document.querySelector("#restoreNow"),
   savingList: document.querySelector("#savingList"),
   categoryGrid: document.querySelector("#categoryGrid"),
+  subcategoryGrid: document.querySelector("#subcategoryGrid"),
+  customCategoryWrap: document.querySelector("#customCategoryWrap"),
+  customCategoryInput: document.querySelector("#customCategoryInput"),
   amountInput: document.querySelector("#amountInput"),
+  amountPreview: document.querySelector("#amountPreview"),
   noteInput: document.querySelector("#noteInput"),
   saveEntry: document.querySelector("#saveEntry"),
   entryList: document.querySelector("#entryList"),
@@ -95,10 +104,21 @@ els.navButtons.forEach((button) => {
   });
 });
 
+document.querySelectorAll("[data-quick-view]").forEach((button) => {
+  button.addEventListener("click", () => {
+    switchView(button.dataset.quickView);
+  });
+});
+
+document.querySelector("[data-quick-saving]")?.addEventListener("click", () => {
+  els.profileAddSaving.click();
+});
+
 document.querySelectorAll(".segmented button").forEach((button) => {
   button.addEventListener("click", () => {
     currentType = button.dataset.type;
-    currentCategory = categories[currentType][0][1];
+    currentCategory = categories[currentType][0].label;
+    currentSubcategory = categories[currentType][0].children[0];
 
     document.querySelectorAll(".segmented button").forEach((item) => {
       item.classList.toggle("active", item === button);
@@ -112,9 +132,20 @@ document.querySelectorAll(".segmented button").forEach((button) => {
 document.querySelectorAll(".quick-amounts button").forEach((button) => {
   button.addEventListener("click", () => {
     els.amountInput.value = button.dataset.amount;
-    els.amountInput.focus();
+    updateAmountPreview();
   });
 });
+
+document.querySelectorAll(".amount-stepper button").forEach((button) => {
+  button.addEventListener("click", () => {
+    const current = Number.parseFloat(els.amountInput.value) || 0;
+    const next = Math.max(0, Math.round((current + Number(button.dataset.delta)) * 100) / 100);
+    els.amountInput.value = next > 0 ? String(next) : "";
+    updateAmountPreview();
+  });
+});
+
+els.amountInput.addEventListener("input", updateAmountPreview);
 
 els.saveEntry.addEventListener("click", () => {
   const amount = Number.parseFloat(els.amountInput.value);
@@ -127,13 +158,15 @@ els.saveEntry.addEventListener("click", () => {
     makeEntry(
       currentType,
       Math.round(amount * 100) / 100,
-      currentCategory,
+      getSelectedCategory(),
       els.noteInput.value.trim()
     )
   );
   state.entries = state.entries.slice(0, 80);
   els.amountInput.value = "";
+  els.customCategoryInput.value = "";
   els.noteInput.value = "";
+  updateAmountPreview();
   persist();
   render();
 });
@@ -159,18 +192,21 @@ els.backupNow.addEventListener("click", () => backupToComputer());
 els.restoreNow.addEventListener("click", () => restoreFromComputer());
 els.syncServerInput.addEventListener("change", () => {
   localStorage.setItem(SYNC_URL_KEY, normalizeUrl(els.syncServerInput.value));
+  autoBackupToComputerIfSafe();
 });
 
 els.profileAddSaving.addEventListener("click", () => {
-  currentType = "saving";
-  currentCategory = "FIRE";
   document.querySelector('[data-type="saving"]').click();
+  currentCategory = "FIRE";
+  currentSubcategory = "六年之约";
+  renderCategories();
   els.noteInput.value = "给六年之约加速";
   switchView("entry");
   els.amountInput.focus();
 });
 
 renderCategories();
+updateAmountPreview();
 renderTodayDate();
 initSync();
 render();
@@ -236,7 +272,9 @@ function persist() {
 
 function initSync() {
   els.syncServerInput.value = getSyncUrl();
-  updateSyncStatus("本机离线可用");
+  updateSyncStatus(getSyncUrl() ? "本机离线可用" : "填写电脑地址后可备份");
+  window.addEventListener("online", () => autoBackupToComputerIfSafe());
+  setTimeout(() => autoBackupToComputerIfSafe(), 800);
 }
 
 async function backupToComputer() {
@@ -293,43 +331,91 @@ async function restoreFromComputer() {
 
 function getSyncUrl() {
   const saved = localStorage.getItem(SYNC_URL_KEY);
-  return normalizeUrl(saved || window.location.origin);
+  const fallback = window.location.origin?.startsWith("http")
+    ? window.location.origin
+    : "";
+  return normalizeUrl(saved || fallback);
 }
 
 function normalizeUrl(value) {
   return String(value || "").trim().replace(/\/+$/, "");
 }
 
-function mergeEntries(localEntries, remoteEntries) {
-  const byId = new Map();
-  [...remoteEntries, ...localEntries].forEach((entry) => {
-    if (!entry?.id) {
+function updateSyncStatus(text) {
+  els.syncStatus.textContent = text;
+}
+
+async function autoBackupToComputerIfSafe() {
+  const url = getSyncUrl();
+  if (!url) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`${url}/api/sync`);
+    if (!response.ok) {
+      throw new Error("compare failed");
+    }
+
+    const remoteData = await response.json();
+    const decision = getBackupDecision(state.entries, remoteData.entries || []);
+    if (!decision.shouldBackup) {
+      if (decision.reason === "remote-has-extra") {
+        updateSyncStatus("电脑有未恢复记录");
+      }
       return;
     }
 
-    const existing = byId.get(entry.id);
-    if (
-      !existing ||
-      new Date(entry.updatedAt || entry.createdAt) >
-        new Date(existing.updatedAt || existing.createdAt)
-    ) {
-      byId.set(entry.id, entry);
-    }
-  });
+    const backupResponse = await fetch(`${url}/api/backup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ entries: state.entries }),
+    });
 
-  return [...byId.values()].sort(
-    (left, right) => new Date(right.createdAt) - new Date(left.createdAt)
-  );
+    if (!backupResponse.ok) {
+      throw new Error("auto backup failed");
+    }
+
+    await backupResponse.json();
+    updateSyncStatus(`已自动备份 ${formatTime(new Date())}`);
+  } catch {
+    updateSyncStatus("离线记录中");
+  }
 }
 
-function updateSyncStatus(text) {
-  els.syncStatus.textContent = text;
+function getBackupDecision(localEntries, remoteEntries) {
+  const localById = new Map(localEntries.map((entry) => [entry.id, entry]));
+  const remoteById = new Map(remoteEntries.map((entry) => [entry.id, entry]));
+
+  const localContainsRemote = remoteEntries.every((entry) =>
+    localById.has(entry.id)
+  );
+
+  if (!localContainsRemote) {
+    return { shouldBackup: false, reason: "remote-has-extra" };
+  }
+
+  const localHasMore = localEntries.length > remoteEntries.length;
+  const localHasNewerEdit = remoteEntries.some((remoteEntry) => {
+    const localEntry = localById.get(remoteEntry.id);
+    return getEntryTime(localEntry) > getEntryTime(remoteEntry);
+  });
+  const remoteEmptyAndLocalHasData = remoteById.size === 0 && localEntries.length > 0;
+
+  return {
+    shouldBackup: localHasMore || localHasNewerEdit || remoteEmptyAndLocalHasData,
+    reason: "safe",
+  };
+}
+
+function getEntryTime(entry) {
+  return new Date(entry?.updatedAt || entry?.createdAt || 0).getTime();
 }
 
 function renderCategories() {
   els.categoryGrid.innerHTML = categories[currentType]
     .map(
-      ([icon, label]) => `
+      ({ icon, label }) => `
         <button class="${label === currentCategory ? "active" : ""}" data-category="${label}">
           <i>${icon}</i>
           <span>${label}</span>
@@ -341,9 +427,68 @@ function renderCategories() {
   els.categoryGrid.querySelectorAll("button").forEach((button) => {
     button.addEventListener("click", () => {
       currentCategory = button.dataset.category;
+      currentSubcategory = getCurrentCategoryConfig().children[0];
       renderCategories();
     });
   });
+
+  renderSubcategories();
+}
+
+function renderSubcategories() {
+  const category = getCurrentCategoryConfig();
+  if (!category.children.includes(currentSubcategory)) {
+    currentSubcategory = category.children[0];
+  }
+
+  els.subcategoryGrid.innerHTML = category.children
+    .map(
+      (label) => `
+        <button class="${label === currentSubcategory ? "active" : ""}" data-subcategory="${label}">
+          ${label}
+        </button>
+      `
+    )
+    .join("");
+
+  els.subcategoryGrid.querySelectorAll("button").forEach((button) => {
+    button.addEventListener("click", () => {
+      currentSubcategory = button.dataset.subcategory;
+      renderSubcategories();
+    });
+  });
+
+  els.customCategoryWrap.hidden = currentSubcategory !== "自定义";
+}
+
+function getCurrentCategoryConfig() {
+  return (
+    categories[currentType].find((item) => item.label === currentCategory) ||
+    categories[currentType][0]
+  );
+}
+
+function getSelectedCategory() {
+  if (currentSubcategory === "自定义") {
+    const custom = els.customCategoryInput.value.trim();
+    return custom ? `${currentCategory}/${custom}` : `${currentCategory}/自定义`;
+  }
+
+  return `${currentCategory}/${currentSubcategory}`;
+}
+
+function getPrimaryCategory(entry) {
+  return String(entry.category || "").split("/")[0] || "未分类";
+}
+
+function getSecondaryCategory(entry) {
+  const parts = String(entry.category || "").split("/");
+  return parts[1] || parts[0] || "未分类";
+}
+
+function updateAmountPreview() {
+  const amount = Number.parseFloat(els.amountInput.value) || 0;
+  els.amountPreview.textContent = money(amount);
 }
 
 function render() {
@@ -393,6 +538,13 @@ function render() {
   els.analysisYear.textContent = money(yearExpense);
   els.analysisDailyAvg.textContent = money(monthExpense / dayOfMonth);
   els.topCategory.textContent = getTopExpenseCategory(entries);
+  const monthlyExpenseEntries = entries.filter(
+    (entry) => entry.type === "expense" && isThisMonth(entry.createdAt)
+  );
+  els.largestExpense.textContent = getLargestExpense(monthlyExpenseEntries);
+  els.frequentCategory.textContent = getFrequentCategory(monthlyExpenseEntries);
+  els.expenseCount.textContent = `${monthlyExpenseEntries.length} 次`;
+  els.categoryBars.innerHTML = renderCategoryBars(monthlyExpenseEntries);
   els.adviceText.textContent = getAdvice({
     todayExpense,
     monthExpense,
@@ -419,7 +571,8 @@ function getTopExpenseCategory(entries) {
   entries
     .filter((entry) => entry.type === "expense" && isThisMonth(entry.createdAt))
     .forEach((entry) => {
-      totals.set(entry.category, (totals.get(entry.category) || 0) + entry.amount);
+      const category = getPrimaryCategory(entry);
+      totals.set(category, (totals.get(category) || 0) + entry.amount);
     });
 
   if (totals.size === 0) {
@@ -428,6 +581,64 @@ function getTopExpenseCategory(entries) {
 
   const [category, total] = [...totals.entries()].sort((a, b) => b[1] - a[1])[0];
   return `${category} · ${money(total)}`;
+}
+
+function getLargestExpense(entries) {
+  if (entries.length === 0) {
+    return "暂无";
+  }
+
+  const largest = [...entries].sort((a, b) => b.amount - a.amount)[0];
+  return `${getSecondaryCategory(largest)} · ${money(largest.amount)}`;
+}
+
+function getFrequentCategory(entries) {
+  if (entries.length === 0) {
+    return "暂无";
+  }
+
+  const counts = new Map();
+  entries.forEach((entry) => {
+    const category = getPrimaryCategory(entry);
+    counts.set(category, (counts.get(category) || 0) + 1);
+  });
+
+  const [category, count] = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
+  return `${category} · ${count} 次`;
+}
+
+function renderCategoryBars(entries) {
+  const totals = new Map();
+  entries.forEach((entry) => {
+    const category = getPrimaryCategory(entry);
+    totals.set(category, (totals.get(category) || 0) + entry.amount);
+  });
+
+  if (totals.size === 0) {
+    return `<div class="empty-chart">本月还没有消费记录。</div>`;
+  }
+
+  const rows = [...totals.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+  const max = rows[0][1] || 1;
+
+  return rows
+    .map(([category, total]) => {
+      const width = Math.max(8, Math.round((total / max) * 100));
+      return `
+        <div class="bar-row">
+          <div class="bar-meta">
+            <span>${escapeHtml(category)}</span>
+            <strong>${money(total)}</strong>
+          </div>
+          <div class="bar-track">
+            <i style="width: ${width}%"></i>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
 }
 
 function getAdvice(context = {}) {
@@ -446,12 +657,12 @@ function getAdvice(context = {}) {
 function renderEntry(entry) {
   const icon = findIcon(entry.type, entry.category);
   const sign = entry.type === "expense" ? "-" : "+";
-  const note = entry.note || entry.category;
+  const note = entry.note || getSecondaryCategory(entry);
   return `
     <li>
       <span class="entry-icon">${icon}</span>
       <span class="entry-meta">
-        <strong>${escapeHtml(entry.category)}</strong>
+        <strong>${escapeHtml(getPrimaryCategory(entry))}</strong>
         <span>${escapeHtml(note)} · ${formatDate(entry.createdAt)}</span>
       </span>
       <span class="entry-amount ${entry.type}">${sign}${money(entry.amount)}</span>
@@ -491,7 +702,8 @@ function isThisYear(dateText) {
 }
 
 function findIcon(type, category) {
-  return categories[type].find((item) => item[1] === category)?.[0] || "📌";
+  const primary = String(category || "").split("/")[0];
+  return categories[type].find((item) => item.label === primary)?.icon || "📌";
 }
 
 function money(value) {
