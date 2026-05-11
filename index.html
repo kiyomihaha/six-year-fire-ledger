@@ -10,7 +10,7 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23fff1de'/%3E%3Cpath d='M32 10c8 8 14 17 14 27a14 14 0 1 1-28 0c0-10 6-19 14-27Z' fill='%23f38b46'/%3E%3Cpath d='M32 22c5 5 8 10 8 16a8 8 0 1 1-16 0c0-6 3-11 8-16Z' fill='%23337b64'/%3E%3C/svg%3E" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="icon.svg" />
-    <link rel="stylesheet" href="styles.css?v=16" />
+    <link rel="stylesheet" href="styles.css?v=17" />
   </head>
   <body>
     <main class="app-shell">
@@ -94,7 +94,7 @@
         <header class="view-header">
           <p class="eyebrow">QUICK ENTRY</p>
           <h1>三秒记一笔</h1>
-          <p class="view-subtitle">先选大概金额，再用加减微调。</p>
+          <p class="view-subtitle">选金额，写备注，再分类。</p>
         </header>
 
         <section class="entry-panel" aria-label="快速记账">
@@ -118,21 +118,31 @@
               <span>中间数</span>
               <div class="quick-amounts" aria-label="常用金额">
                 <button data-amount="10">¥10</button>
-                <button data-amount="20">¥20</button>
                 <button data-amount="30">¥30</button>
                 <button data-amount="50">¥50</button>
                 <button data-amount="100">¥100</button>
-                <button data-amount="200">¥200</button>
+                <button data-amount="300">¥300</button>
+                <button data-amount="500">¥500</button>
+                <button data-amount="1000">¥1k</button>
+                <button data-amount="3000">¥3k</button>
+                <button data-amount="5000">¥5k</button>
               </div>
             </div>
             <div class="amount-stepper" aria-label="金额微调">
+              <button data-delta="-100">-100</button>
               <button data-delta="-10">-10</button>
               <button data-delta="-1">-1</button>
               <span>微调</span>
               <button data-delta="1">+1</button>
               <button data-delta="10">+10</button>
+              <button data-delta="100">+100</button>
             </div>
           </div>
+
+          <label class="note-field">
+            <span>备注</span>
+            <input id="noteInput" placeholder="可选，比如 午饭 / 地铁 / 工资" autocomplete="off" />
+          </label>
 
           <div class="category-block">
             <span class="field-caption">一级分类</span>
@@ -148,11 +158,6 @@
               <input id="customCategoryInput" placeholder="比如 夜宵 / 宠物 / 数码配件" autocomplete="off" />
             </label>
           </div>
-
-          <label class="note-field">
-            <span>备注</span>
-            <input id="noteInput" placeholder="可选，比如 午饭 / 地铁 / 工资" autocomplete="off" />
-          </label>
 
           <button class="primary-action" id="saveEntry">记一笔</button>
         </section>
@@ -294,6 +299,6 @@
       <button data-view-target="profile"><span>我</span>我的</button>
     </nav>
 
-    <script src="app.js?v=16"></script>
+    <script src="app.js?v=17"></script>
   </body>
 </html>

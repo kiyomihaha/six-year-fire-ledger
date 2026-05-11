@@ -69,3 +69,6 @@
 - 2026-05-10: Codex final gate review 完成，3 个 P2 发现已修复：`backedUpAt` undefined 容错、`resetDemoData` 后 UI 恢复、SW precache 版本号同步。
 - 2026-05-10 22:30: Phase 3 app.js modularization pass 1 完成：将 app.js 按 7 个职责区域（Constants & Configuration / Pure Helpers / Validation / State Management / Sync & Backup / Rendering / Boot & Event Wiring）用注释标记重组，所有 `function` 声明保持 hoisted，行为不变。同步更新 APK assets。
 - 2026-05-10 23:45: Codex refactor gate review 完成，发现 P2：本地异常时 `restoreFromComputer()` 被阻塞导致无法从电脑恢复有效备份修复本地异常。已修复：移除 restore 中的 `localDataIssue` guard，恢复按钮在异常时保持可用。Codex 复审通过，零发现。APK 已同步更新。
+- 2026-05-11 09:30: UX 改进：金额快捷选项扩充至 ¥10~¥5k（9 个），微调步进改为 ±100/±10；备注移到分类上方，免滚动。APK 已重编。GitHub 已同步推送。
+- 2026-05-11 09:45: Codex 复审 UX 改动，发现 2 个 P2：手动金额输入框被隐藏无法输入非整数、SW 缓存版本未同步。已修复：取消 `.amount-field` 隐藏、bump SW v17。复审通过。APK 已重编。
+- 2026-05-11 10:00: UX Round 2 — 个位微调（±1）恢复，隐藏金额输入框（仅点选），压缩记账界面间距免滚动。Codex 审查发现 P2：`.amount-stepper` 7 列网格布局 CSS 未插入（Edit 工具匹配到 2 个 `.quick-dock button` 导致失败）。已修复：在 `styles.css` 和 APK assets 中补入 7 列 grid CSS。复审通过，零发现。
