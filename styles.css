@@ -336,6 +336,7 @@ h2 { font-size: 18px; }
   right: auto;
   bottom: 10px;
   left: 50%;
+  z-index: 100;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   width: min(calc(100% - 24px), 436px);
